@@ -5,6 +5,8 @@ const CLAUDE_API_KEY = "";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const API_BASE           = "web-production-cedf2.up.railway.app";
+const SUPABASE_ENABLED = true;
+const USER_ID = "nftking";  // change to any unique ID you want
 const SCAN_INTERVAL      = 30000;
 const PAGE_SIZE          = 25;
 const MAKER_REWARD_DAILY = 0.0005; // 0.05%/day conservative maker reward estimate
