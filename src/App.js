@@ -699,7 +699,20 @@ export default function App() {
     setLoading(false);
   }, [alertsOn, threshold]);
 
-  useEffect(() => { scan(); }, []);
+  useEffect(() => {
+  if (SUPABASE_ENABLED) {
+    fetch(`${API_BASE}/user/${USER_ID}/watchlist`)
+      .then(r=>r.json())
+      .then(d=>{ if(d.market_ids?.length) setWatchlist(d.market_ids); })
+      .catch(()=>{});
+    fetch(`${API_BASE}/user/${USER_ID}/positions`)
+      .then(r=>r.json())
+      .then(d=>{ if(d.positions?.length) setPositions(d.positions); })
+      .catch(()=>{});
+  }
+  scan();
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
   useEffect(() => {
     clearInterval(timerRef.current);
     if (alertsOn) timerRef.current = setInterval(scan, SCAN_INTERVAL);
