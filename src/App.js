@@ -76,10 +76,8 @@ function urgencyBg(days, T) {
 }
 function scoreColor(s, T) { return s>=75?T.green:s>=50?T.amber:T.coral; }
 function scoreBg(s, T)    { return s>=75?T.greenBg:s>=50?T.amberBg:T.coralBg; }
-function scoreLabel(s)    { return s>=75?"PRIME":s>=50?"WATCH":"RISKY"; }
 function farmColor(s, T)  { return s>=75?T.purple:s>=50?T.navy:T.inkFaint; }
 function farmBg(s, T)     { return s>=75?T.purpleBg:s>=50?T.navyBg:"transparent"; }
-function farmLabel(s)     { return s>=75?"HIDDEN GEM":s>=50?"WATCH":"LOW"; }
 function fmtUSD(n) {
   if (!n || isNaN(n)) return "$0";
   if (n>=1_000_000) return `$${(n/1_000_000).toFixed(1)}M`;
@@ -89,15 +87,6 @@ function fmtUSD(n) {
 function pct(n) { return `${(n*100).toFixed(1)}%`; }
 
 // ── LP Score (general, existing logic) ──
-function calcLPScore(yes, no, liquidity, endDate) {
-  try {
-    const days = daysLeft(endDate);
-    const balance    = 1 - Math.abs(yes - 0.5) * 2;
-    const timeScore  = days > 60 ? 1.0 : days > 30 ? 0.7 : 0.3;
-    const liqScore   = liquidity < 500 ? 1.0 : liquidity < 2000 ? 0.7 : 0.4;
-    return Math.round((balance * 0.5 + timeScore * 0.3 + liqScore * 0.2) * 100);
-  } catch { return 0; }
-}
 
 // ── FARM Score (new — optimised for maker reward farming with small capital) ──
 // Weights:
@@ -106,7 +95,7 @@ function calcLPScore(yes, no, liquidity, endDate) {
 //   Volume pattern (15%) — steady low vol preferred over spiky
 //   Time horizon (20%) — longer = more reward accumulation
 function calcFarmScore(market, priceHistory) {
-  const { yes, no, liquidity, endDate, volume } = market;
+  const { yes, liquidity, endDate, volume } = market;
 
   // 1. Pool share — ideal: $50 captures >5% of pool
   const poolShare = liquidity > 0 ? DEFAULT_CAPITAL / (liquidity + DEFAULT_CAPITAL) : 0;
