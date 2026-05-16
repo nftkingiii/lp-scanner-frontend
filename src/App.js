@@ -1,9 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
-// ─── YOUR CLAUDE API KEY ──────────────────────────────────────────────────────
-const CLAUDE_API_KEY = "";
-// ─────────────────────────────────────────────────────────────────────────────
-
 const API_BASE           = "https://web-production-cedf2.up.railway.app";
 const SUPABASE_ENABLED = true;
 const USER_ID = "nftking";  // change to any unique ID you want
@@ -787,41 +783,29 @@ export default function App() {
         ? Math.sqrt(yesHist.reduce((a,b)=>a+(b-(yesHist.reduce((x,y)=>x+y)/yesHist.length))**2,0)/yesHist.length).toFixed(4)
         : "N/A";
       const poolShare = calcPoolShare(DEFAULT_CAPITAL, market.liquidity);
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "x-api-key":CLAUDE_API_KEY,
-          "anthropic-version":"2023-06-01",
-          "anthropic-dangerous-direct-browser-access":"true",
-        },
-        body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
-          max_tokens:1000,
-          system:`You are a sharp Polymarket LP analyst specialising in maker reward farming.
-The user places resting limit orders near the midpoint to earn maker rewards without getting filled.
-Tone: direct, no fluff, no bullet lists. Format: 3 short paragraphs.
-Cover: odds stability assessment, informed trader risk, pool share advantage, and a clear verdict.
-End with BUY / PASS / WAIT on its own line.`,
-          messages:[{role:"user",content:
-`Market: "${market.question}"
-YES: ${pct(market.yes)} | NO: ${pct(market.no)}
-Volume: ${fmtUSD(market.volume)} | Liquidity: ${fmtUSD(market.liquidity)}
-Est. APY: ~${apy}% | $50 pool share: ${poolShare}%
-Odds stdev across scans: ${stdev}
-Days left: ${daysLeft(market.endDate)}
-LP Score: ${market.score}/100 | Farm Score: ${market.farmScore}/100
-Strategy: resting maker orders near 50/50 to earn rewards. Cancel if odds drift 7¢+.
-Analyze for this specific strategy.`}]
-        })
-      });
-      const data = await res.json();
-      setAnalysis(data.content?.find(b=>b.type==="text")?.text || "Analysis unavailable.");
-    } catch {
-      setAnalysis("Could not reach Claude API. Check your key and connection.");
-    }
-    setALoading(false);
-  };
+      const res = await fetch(`${API_BASE}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          market,
+          prompt: `Market: "${market.question}"
+      YES: ${pct(market.yes)} | NO: ${pct(market.no)}
+      Volume: ${fmtUSD(market.volume)} | Liquidity: ${fmtUSD(market.liquidity)}
+      Est. APY: ~${apy}% | $50 pool share: ${poolShare}%
+      Odds stdev across scans: ${stdev}
+      Days left: ${daysLeft(market.endDate)}
+      LP Score: ${market.score}/100 | Farm Score: ${market.farmScore}/100
+      Strategy: resting maker orders near 50/50 to earn rewards. Cancel if odds drift 7¢+.
+      Analyze for this specific strategy.`
+       })
+     });
+     const data = await res.json();
+     setAnalysis(data.analysis || "Analysis unavailable.");
+     } catch {
+       setAnalysis("Could not reach Claude API. Check your connection.");
+     }
+     setALoading(false);
+     };
 
   // render market row
   const renderMarketRow = (m, indent=false) => {
@@ -909,15 +893,6 @@ Analyze for this specific strategy.`}]
     <>
       <style>{makeCSS(T, isDark)}</style>
       <div className="root">
-
-        {noApiKey && (
-          <div className="api-warning">
-            <span>⚠</span>
-            <span>Claude API key not set. Open <strong>src/App.js</strong> and replace <code>"your-api-key-here"</code> with your key from{" "}
-              <a href="https://console.anthropic.com/settings/api-keys" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>
-            </span>
-          </div>
-        )}
 
         {/* MASTHEAD */}
         <header className="masthead">
