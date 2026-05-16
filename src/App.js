@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 const CLAUDE_API_KEY = "";
 // ─────────────────────────────────────────────────────────────────────────────
 
-const API_BASE           = "web-production-cedf2.up.railway.app";
+const API_BASE           = "https://web-production-cedf2.up.railway.app";
 const SUPABASE_ENABLED = true;
 const USER_ID = "nftking";  // change to any unique ID you want
 const SCAN_INTERVAL      = 30000;
